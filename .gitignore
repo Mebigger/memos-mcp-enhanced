@@ -1,0 +1,37 @@
+# Environment variables
+.env
+.env.*
+
+# MCP configuration (local only)
+.mcp.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+.eggs/
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Operating System
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary test files
+test_*.py
+*test_*.jpg
