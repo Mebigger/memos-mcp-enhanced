@@ -12,7 +12,7 @@ def main() -> None:
     if not settings.is_configured:
         print(
             "Warning: MEMOS_API_TOKEN not configured. "
-            "Please set it in .env file or environment variable.",
+            "Please set MEMOS_INSTANCE_URL and MEMOS_API_TOKEN in your MCP client's env config.",
             file=sys.stderr,
         )
 

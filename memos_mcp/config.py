@@ -1,17 +1,44 @@
 """Configuration management for Memos MCP server."""
 import os
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
+def find_env_file() -> Optional[str]:
+    """
+    Find .env file in common locations.
+    
+    Search order:
+    1. Current working directory
+    2. Package directory's parent (for local development)
+    
+    Returns None if not found (will rely on environment variables only).
+    """
+    # Check current working directory
+    cwd_env = Path.cwd() / ".env"
+    if cwd_env.exists():
+        return str(cwd_env)
+    
+    # Check package directory's parent (for local development)
+    # This handles: project_root/memos_mcp/config.py -> project_root/.env
+    package_dir = Path(__file__).parent.parent / ".env"
+    if package_dir.exists():
+        return str(package_dir)
+    
+    return None
+
+
 class Settings(BaseSettings):
     """Memos MCP server settings."""
 
+    # Note: env_prefix="MEMOS_" means all env vars should be prefixed with MEMOS_
+    # e.g., instance_url -> MEMOS_INSTANCE_URL, api_token -> MEMOS_API_TOKEN
+    # Priority: Environment variables > .env file > defaults
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=find_env_file(),
         env_prefix="MEMOS_",
         extra="ignore",
     )

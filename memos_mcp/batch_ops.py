@@ -74,56 +74,87 @@ async def batch_operation_impl(
         errors = []
         
         for memo in memos:
-            memo_id = memo.get("id")
+            memo_id = memo.get("id") or memo.get("name")
+            # Extract actual ID from full resource name (e.g., "memos/123" -> "123")
+            id_val = str(memo_id).split("/")[-1] if memo_id else None
+            
+            if not id_val:
+                errors.append({"memo_id": memo_id, "error": "Invalid memo ID"})
+                continue
+                
             try:
                 if operation == "delete":
-                    await client.delete(f"/memos/{memo_id}")
+                    await client.delete(f"/memos/{id_val}")
                     results.append(memo_id)
                     
                 elif operation == "add_tag":
                     if not tag:
                         return str(format_error(code="MISSING_PARAM", message="tag parameter required"))
+                    
+                    # Get current content and tags
+                    content = memo.get("content", "")
                     existing_tags = memo.get("tags", [])
+                    
                     if tag not in existing_tags:
+                        # Add tag to content in #tag format
+                        import re
+                        content_without_tags = re.sub(r'\s*#\S+', '', content).strip()
                         new_tags = existing_tags + [tag]
-                        await client.patch(f"/memos/{memo_id}", 
-                                         params={"updateMask": "tags"},
-                                         json={"tags": new_tags})
+                        tag_string = " " + " ".join(f"#{t}" for t in new_tags)
+                        new_content = content_without_tags + tag_string
+                        
+                        await client.patch(f"/memos/{id_val}", 
+                                         params={"updateMask": "content"},
+                                         json={"content": new_content})
                     results.append(memo_id)
                     
                 elif operation == "remove_tag":
                     if not tag:
                         return str(format_error(code="MISSING_PARAM", message="tag parameter required"))
+                    
+                    # Get current content and tags
+                    content = memo.get("content", "")
                     existing_tags = memo.get("tags", [])
+                    
                     if tag in existing_tags:
+                        # Remove tag from content
+                        import re
+                        content_without_tags = re.sub(r'\s*#\S+', '', content).strip()
                         new_tags = [t for t in existing_tags if t != tag]
-                        await client.patch(f"/memos/{memo_id}",
-                                         params={"updateMask": "tags"},
-                                         json={"tags": new_tags})
+                        
+                        if new_tags:
+                            tag_string = " " + " ".join(f"#{t}" for t in new_tags)
+                            new_content = content_without_tags + tag_string
+                        else:
+                            new_content = content_without_tags
+                        
+                        await client.patch(f"/memos/{id_val}",
+                                         params={"updateMask": "content"},
+                                         json={"content": new_content})
                     results.append(memo_id)
                     
                 elif operation == "set_visibility":
                     if not new_visibility:
                         return str(format_error(code="MISSING_PARAM", message="new_visibility parameter required"))
-                    await client.patch(f"/memos/{memo_id}",
+                    await client.patch(f"/memos/{id_val}",
                                      params={"updateMask": "visibility"},
                                      json={"visibility": validate_visibility(new_visibility)})
                     results.append(memo_id)
                     
                 elif operation == "pin":
-                    await client.patch(f"/memos/{memo_id}",
+                    await client.patch(f"/memos/{id_val}",
                                      params={"updateMask": "pinned"},
                                      json={"pinned": True})
                     results.append(memo_id)
                     
                 elif operation == "unpin":
-                    await client.patch(f"/memos/{memo_id}",
+                    await client.patch(f"/memos/{id_val}",
                                      params={"updateMask": "pinned"},
                                      json={"pinned": False})
                     results.append(memo_id)
                     
                 elif operation == "archive":
-                    await client.patch(f"/memos/{memo_id}",
+                    await client.patch(f"/memos/{id_val}",
                                      params={"updateMask": "rowStatus"},
                                      json={"rowStatus": "ARCHIVED"})
                     results.append(memo_id)

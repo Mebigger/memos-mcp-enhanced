@@ -685,17 +685,42 @@ async def update_memo(
         update_mask = []
         payload = {}
 
-        if content is not None:
+        # Handle tags update - Memos API only recognizes tags in content as #tag format
+        if tags is not None:
+            # Get current content if not provided
+            current_content = content
+            if current_content is None:
+                id_val = str(memo_id).split("/")[-1]
+                current_memo = await client.get(f"/memos/{id_val}")
+                if current_memo.get("error"):
+                    return format_error(
+                        code="GET_FAILED",
+                        message="Failed to get current memo for tag update",
+                        suggestion=f"Verify that memo ID {memo_id} exists.",
+                    )
+                current_content = current_memo.get("content", "")
+            
+            # Remove existing tags from content (anything starting with #)
+            # Use \s*#\S+ to match tags with optional leading whitespace
+            import re
+            content_without_tags = re.sub(r'\s*#\S+', '', current_content).strip()
+            
+            # Add new tags to content
+            if tags:
+                tag_string = " " + " ".join(f"#{tag}" for tag in tags)
+                final_content = content_without_tags + tag_string
+            else:
+                final_content = content_without_tags
+            
+            payload["content"] = final_content
+            update_mask.append("content")
+        elif content is not None:
             payload["content"] = content
             update_mask.append("content")
 
         if visibility is not None:
             payload["visibility"] = validate_visibility(visibility)
             update_mask.append("visibility")
-
-        if tags is not None:
-            payload["tags"] = tags
-            update_mask.append("tags")
 
         if pinned is not None:
             payload["pinned"] = pinned
@@ -735,6 +760,8 @@ async def update_memo(
             code="UPDATE_ERROR",
             message=str(e),
         )
+
+
 
 
 # ============ DELETE ============
@@ -1177,15 +1204,16 @@ async def list_memo_resources(
                 suggestion=f"Verify that memo ID {memo_id} exists.",
             )
 
-        resources = response.get("resources", [])
+        # Memos API may return resources in 'resources' or 'attachments' field
+        resources = response.get("resources") or response.get("attachments") or []
 
         formatted_resources = [
             {
-                "id": r.get("id"),
-                "filename": r.get("filename"),
+                "id": r.get("id") or r.get("name"),
+                "filename": r.get("filename") or r.get("name"),
                 "type": r.get("type"),
                 "size": r.get("size"),
-                "url": r.get("externalLink") or f"/api/v1/resources/{r.get('id')}",
+                "url": r.get("externalLink") or f"/api/v1/resources/{r.get('id') or r.get('name')}",
             }
             for r in resources
         ]
@@ -1332,11 +1360,13 @@ async def create_todo(
                 suggestion="Provide todo content using 'content' or 'items' parameter.",
             ))
         
-        # Create memo with todo tag
+        # Add todo tag to content (Memos only recognizes tags in content as #tag format)
+        todo_content_with_tag = todo_content + f" #{settings.todo_tag}"
+        
+        # Create memo
         payload = {
-            "content": todo_content,
+            "content": todo_content_with_tag,
             "visibility": validate_visibility(visibility) if visibility else "PRIVATE",
-            "tags": [settings.todo_tag],
             "pinned": pinned,
         }
         
@@ -1653,7 +1683,7 @@ async def add_attachment(
 @mcp.tool()
 async def remove_attachment(
     memo_id: Annotated[str, "Memo ID"],
-    attachment_id: Annotated[int | None, "Attachment ID"] = None,
+    attachment_id: Annotated[str | None, "Attachment ID (e.g., 'attachments/xxx')"] = None,
     filename: Annotated[str | None, "Filename"] = None,
 ) -> str:
     """Remove an attachment from a memo."""
