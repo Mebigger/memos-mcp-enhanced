@@ -47,7 +47,7 @@ Add the following to your MCP configuration file:
 
 1.  Clone the repository:
     ```bash
-    git clone https://github.com/yourusername/memos-mcp-enhanced.git
+    git clone https://github.com/Mebigger/memos-mcp-enhanced.git
     cd memos-mcp-enhanced
     ```
 
@@ -118,7 +118,7 @@ The server exposes 26 tools including:
 
 1.  克隆仓库：
     ```bash
-    git clone https://github.com/yourusername/memos-mcp-enhanced.git
+    git clone https://github.com/Mebigger/memos-mcp-enhanced.git
     cd memos-mcp-enhanced
     ```
 
