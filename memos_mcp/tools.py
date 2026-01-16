@@ -155,9 +155,17 @@ async def create_memo_with_attachments(
         # The 'tags' field in API is ignored, so we append tags to content
         memo_content = content
         if tags:
-            # Append tags to content in #tag format
-            tag_string = " " + " ".join(f"#{tag}" for tag in tags)
-            memo_content = content + tag_string
+            # Extract existing tags from content to avoid duplicates
+            import re
+            existing_tags = set(re.findall(r'#(\S+)', content))
+            
+            # Only add tags that don't already exist in content
+            new_tags = [tag for tag in tags if tag not in existing_tags]
+            
+            if new_tags:
+                # Append new tags to content in #tag format
+                tag_string = " " + " ".join(f"#{tag}" for tag in new_tags)
+                memo_content = content + tag_string
         
         payload = {
             "content": memo_content,
@@ -275,9 +283,17 @@ async def create_memo(
         # The 'tags' field in API is ignored, so we append tags to content
         memo_content = content
         if tags:
-            # Append tags to content in #tag format
-            tag_string = " " + " ".join(f"#{tag}" for tag in tags)
-            memo_content = content + tag_string
+            # Extract existing tags from content to avoid duplicates
+            import re
+            existing_tags = set(re.findall(r'#(\S+)', content))
+            
+            # Only add tags that don't already exist in content
+            new_tags = [tag for tag in tags if tag not in existing_tags]
+            
+            if new_tags:
+                # Append new tags to content in #tag format
+                tag_string = " " + " ".join(f"#{tag}" for tag in new_tags)
+                memo_content = content + tag_string
         
         payload = {
             "content": memo_content,
@@ -447,6 +463,10 @@ async def search_memos(
         str | None,
         "Filter by visibility: PUBLIC, PRIVATE, or PROTECTED.",
     ] = None,
+    state: Annotated[
+        str | None,
+        "Filter by memo state: NORMAL (default, active memos) or ARCHIVED (archived memos).",
+    ] = None,
     date_range: Annotated[
         str | None,
         "Natural language date range (e.g., '今天', '过去一周', 'last month'). "
@@ -490,6 +510,7 @@ async def search_memos(
     - Tag filtering
     - Visibility filtering
     - Pinned status filtering
+    - State filtering (NORMAL or ARCHIVED)
 
     All filters are combined with AND logic.
     Note: Date filtering is performed client-side, so it searches within the most recent memos (up to 1000).
@@ -500,6 +521,8 @@ async def search_memos(
     - Search by date range: search_memos(created_after="2024-01-01", created_before="2024-12-31")
     - Combined search: search_memos(keyword="project", tags=["work"], visibility="PRIVATE")
     - Get only pinned: search_memos(pinned=True)
+    - Get archived memos: search_memos(state="ARCHIVED")
+    - Get archived memos from last week: search_memos(state="ARCHIVED", date_range="上周")
 
     Returns matching memos with search metadata.
     """
@@ -560,14 +583,35 @@ async def search_memos(
             pinned=pinned,
         )
 
-        # 3. Determine fetch behavior
+        # 3. Validate and prepare state parameter
+        if state is not None:
+            valid_states = ["NORMAL", "ARCHIVED"]
+            state_upper = state.upper()
+            if state_upper not in valid_states:
+                return format_error(
+                    code="INVALID_STATE",
+                    message=f"Invalid state: {state}. Must be one of: {', '.join(valid_states)}",
+                )
+            state_param = state_upper
+        else:
+            state_param = None
+
+        # 4. Determine fetch behavior
         # If filtering by date, we need to fetch more data to ensure we find matches
         if has_date_filter:
             fetch_size = settings.search_max_limit  # Fetch max allowed
         else:
             fetch_size = min(limit or settings.search_default_limit, settings.search_max_limit)
 
-        response = await client.get("/memos", params={"pageSize": fetch_size, "filter": filter_str})
+        # 5. Build API request parameters
+        api_params = {
+            "pageSize": fetch_size,
+            "filter": filter_str,
+        }
+        if state_param:
+            api_params["state"] = state_param
+
+        response = await client.get("/memos", params=api_params)
 
         if response.get("error"):
             return format_error(

@@ -1,5 +1,9 @@
 # Memos MCP Server Enhanced
 
+[![PyPI version](https://img.shields.io/pypi/v/memos-mcp-enhanced.svg)](https://pypi.org/project/memos-mcp-enhanced/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub release](https://img.shields.io/github/v/release/Mebigger/memos-mcp-enhanced.svg)](https://github.com/Mebigger/memos-mcp-enhanced/releases)
+
 [English](#english) | [中文](#chinese)
 
 <a name="english"></a>
@@ -12,7 +16,7 @@ An enhanced [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) ser
 ### ✨ Key Features
 
 *   **Complete CRUD**: Create, read, update, and delete memos.
-*   **Smart Search**: Support for natural language date filtering (e.g., "find notes from last week", "search for 'meeting' in 2024").
+*   **Smart Search**: Support for natural language date filtering (e.g., "find notes from last week", "search for 'meeting' in 2024"). **Now supports searching archived memos!**
 *   **Task Management**: Dedicated tools for managing TODO lists (`list_todos`, `create_todo`, `complete_todo`).
 *   **Resource Management**: Upload files, manage attachments, and attach them to memos.
 *   **Batch Operations**: Archive or delete multiple memos in one go.
@@ -83,7 +87,7 @@ The server exposes 26 tools including:
 ### ✨ 核心功能
 
 *   **全功能 CRUD**: 创建、读取、更新、删除笔记。
-*   **智能搜索**: 支持自然语言的日期过滤搜索（支持如 "查找上周的笔记"、"搜索去年的记录" 等自然语言）。
+*   **智能搜索**: 支持自然语言的日期过滤搜索（支持如 "查找上周的笔记"、"搜索去年的记录" 等自然语言）。**现已支持搜索归档笔记！**
 *   **待办管理**: 专门的 TODO 管理工具 (`list_todos`, `create_todo`, `complete_todo`)。
 *   **附件管理**: 支持文件上传、管理及绑定到笔记。
 *   **批量操作**: 支持批量归档、删除笔记。

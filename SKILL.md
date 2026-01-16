@@ -119,6 +119,15 @@ search_memos(tags=["work", "urgent"], visibility="PRIVATE")
 
 # Get all notes from yesterday
 search_memos(date_range="yesterday")
+
+# Get archived memos
+search_memos(state="ARCHIVED")
+
+# Get archived memos from last week
+search_memos(state="ARCHIVED", date_range="上周")
+
+# Search archived memos with keyword
+search_memos(state="ARCHIVED", keyword="meeting", tags=["work"])
 ```
 
 ### Manage Todos
@@ -182,7 +191,7 @@ export_for_wechat(
 ## Important Notes
 
 1. **Memo IDs**: Can be numeric (e.g., "123") or full resource names (e.g., "memos/abc")
-2. **Tags in Content**: Tags can be embedded in content as `#tag` or passed as array
+2. **Tags**: Tags are automatically injected into the content as `#tag` strings. This is necessary because the Memos API identifies tags via content parsing.
 3. **Deletion is Permanent**: Use `archive_memo` instead of `delete_memo` when possible
 4. **File Paths**: Must be absolute paths for file uploads
 5. **Batch Safety**: Always preview batch operations before confirming
@@ -199,10 +208,15 @@ If a tool returns an error:
 ## Configuration
 
 The MCP server requires these environment variables:
-- `MEMOS_INSTANCE_URL` - Your Memos instance URL
-- `MEMOS_API_TOKEN` - Your API authentication token
+- `MEMOS_INSTANCE_URL`: Your Memos instance URL (e.g., https://your-memos.com)
+- `MEMOS_API_TOKEN`: Your API authentication token
 
-Optional settings:
-- `MEMOS_TODO_TAG` - Tag for todos (default: "todo")
-- `OBSIDIAN_VAULT_PATH` - Path to Obsidian vault for exports
-- `RESPONSE_FORMAT` - Output format: "json" or "markdown"
+Optional settings (can be set in MCP client's `env` section):
+- `MEMOS_TODO_TAG`: Tag used for todo items (default: "todo")
+- `MEMOS_OBSIDIAN_VAULT`: Path to local Obsidian vault for exports
+- `MEMOS_CHARACTER_LIMIT`: Maximum characters in individual responses (default: 25000)
+- `MEMOS_RESPONSE_FORMAT`: Default response format: "json" or "markdown"
+- `MEMOS_TIMEOUT`: API request timeout in seconds (default: 30)
+- `MEMOS_TEMPLATE_DIR`: Directory for memo templates (default: ~/.memos-templates/)
+
+Note: Environment variables always take priority over `.env` files.

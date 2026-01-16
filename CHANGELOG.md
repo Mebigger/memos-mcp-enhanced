@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.2] - 2026-01-16
+
+### 🐛 Bug Fixes
+
+- **Configuration Loading**: Fixed critical issue where configuration failed to load when running via `uvx`
+  - Issue: Pydantic-settings defaulted to searching for `.env` only in the current working directory, causing connection failures (localhost:8080) when launched from MCP clients.
+  - Fix: Implemented intelligent `.env` discovery and prioritized environment variables.
+  - Improvement: Added support for `MEMOS_` prefix to all optional settings for consistency.
+
+---
+
 ## [0.2.0] - 2026-01-16
 
 ### 🐛 Bug Fixes
@@ -148,6 +159,6 @@ See [OPTIMIZATION_GUIDE.md](./OPTIMIZATION_GUIDE.md) for detailed technical info
 
 ## Links
 
-- [GitHub Repository](https://github.com/YOUR_USERNAME/memos-mcp-enhanced)
+- [GitHub Repository](https://github.com/Mebigger/memos-mcp-enhanced)
 - [PyPI Package](https://pypi.org/project/memos-mcp-enhanced/)
-- [Issue Tracker](https://github.com/YOUR_USERNAME/memos-mcp-enhanced/issues)
+- [Issue Tracker](https://github.com/Mebigger/memos-mcp-enhanced/issues)
